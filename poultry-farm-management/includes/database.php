@@ -21,14 +21,27 @@ function db(): PDO {
         PDO::ATTR_EMULATE_PREPARES => false,
     ];
     // Cloud MySQL (e.g. Aiven) requires TLS: the CA certificate is passed as PEM text and written to a temp file.
-    if (!empty($c['ssl_ca'])) {
+    $caFile = $c['ssl_ca_file'] ?? null;
+    if (!$caFile && !empty($c['ssl_ca'])) {
         $pem = normalize_pem((string)$c['ssl_ca']);
         $caFile = sys_get_temp_dir() . '/pfm-db-ca-' . md5($pem) . '.pem';
         if (!is_file($caFile)) file_put_contents($caFile, $pem);
+    }
+    if ($caFile) {
         $opts[PDO::MYSQL_ATTR_SSL_CA] = $caFile;
         $opts[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = true;
     }
-    $pdo = new PDO($dsn, $c['user'], $c['pass'], $opts);
+    // PDO only says "Cannot connect to MySQL using SSL"; the real reason (e.g. "certificate verify failed")
+    // arrives as a PHP warning, so collect warnings during connect and add them to the error.
+    $warnings = [];
+    set_error_handler(function (int $no, string $msg) use (&$warnings) { $warnings[] = $msg; return true; });
+    try {
+        $pdo = new PDO($dsn, $c['user'], $c['pass'], $opts);
+    } catch (PDOException $e) {
+        throw new PDOException($e->getMessage() . ($warnings ? ' | ' . implode(' | ', $warnings) : ''), 0, $e);
+    } finally {
+        restore_error_handler();
+    }
     $offset = (new DateTime('now', new DateTimeZone(date_default_timezone_get())))->format('P');
     $pdo->exec("SET time_zone = '" . $offset . "'");
     return $pdo;

@@ -18,7 +18,10 @@ function env_config(): ?array {
             'user'    => getenv('DB_USER') ?: 'root',
             'pass'    => (string)getenv('DB_PASS'),
             'charset' => 'utf8mb4',
-            'ssl_ca'  => getenv('DB_SSL_CA') ?: null,   // PEM text of the provider's CA certificate
+            // The database provider's CA certificate (public, not a secret). config/db-ca.pem in the repo wins,
+            // because pasting a certificate into a dashboard text box often mangles it.
+            'ssl_ca_file' => is_file(APP_ROOT . '/config/db-ca.pem') ? APP_ROOT . '/config/db-ca.pem' : null,
+            'ssl_ca'  => getenv('DB_SSL_CA') ?: null,   // fallback: PEM text in an environment variable
         ],
         'app' => [
             'timezone'     => getenv('APP_TIMEZONE') ?: 'Asia/Phnom_Penh',
