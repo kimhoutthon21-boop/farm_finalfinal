@@ -15,7 +15,7 @@ function setup_shell(string $title, string $body): void {
     echo '<!doctype html><html lang="' . e(current_language()) . '"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>' . e(t('Setup')) . '</title><link rel="stylesheet" href="' . e(url('assets/css/app.css')) . '?v=34"></head><body class="auth"><div class="auth-card">' . language_switcher() . '<span class="brand-mark logo-mark"><img src="' . e(url('assets/images/farm-logo.png')) . '" alt=""></span><h1>' . e(t($title)) . '</h1>' . $body . '</div><script>window.__translations = ' . json_encode(translations(), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) . ';</script><script src="' . e(url('assets/js/i18n.js')) . '?v=1"></script><script src="' . e(url('assets/js/app.js')) . '"></script></body></html>';
     exit;
 }
-$configExists = is_file($GLOBALS['PFM_CONFIG_FILE']);
+$configExists = $GLOBALS['PFM_ENV_CONFIG'] !== null || is_file($GLOBALS['PFM_CONFIG_FILE']);
 $msg = '';
 
 if (!$configExists) {

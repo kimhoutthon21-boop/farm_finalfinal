@@ -1,0 +1,26 @@
+# Render Blueprint: creates the web service. Secrets (sync: false) are typed in on the Render dashboard.
+services:
+  - type: web
+    name: poultry-farm-management
+    runtime: docker
+    rootDir: poultry-farm-management
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free
+    region: singapore
+    healthCheckPath: /login.php
+    envVars:
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        sync: false
+      - key: DB_NAME
+        value: defaultdb
+      - key: DB_USER
+        sync: false
+      - key: DB_PASS
+        sync: false
+      - key: DB_SSL_CA
+        sync: false
+      - key: APP_TIMEZONE
+        value: Asia/Phnom_Penh

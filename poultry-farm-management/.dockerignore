@@ -1,0 +1,6 @@
+.git
+config/config.php
+*.log
+Dockerfile
+.dockerignore
+render.yaml

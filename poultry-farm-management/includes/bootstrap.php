@@ -5,8 +5,34 @@ declare(strict_types=1);
 define('APP_ROOT', dirname(__DIR__));
 $GLOBALS['PFM_CONFIG_FILE'] = APP_ROOT . '/config/config.php';
 
+// Hosted deployments (e.g. Render) set DB_HOST and friends as environment variables
+// instead of writing config/config.php, because the server's files are reset on every deploy.
+function env_config(): ?array {
+    $host = getenv('DB_HOST');
+    if ($host === false || $host === '') return null;
+    return [
+        'db' => [
+            'host'    => $host,
+            'port'    => (int)(getenv('DB_PORT') ?: 3306),
+            'name'    => getenv('DB_NAME') ?: 'poultry_farm',
+            'user'    => getenv('DB_USER') ?: 'root',
+            'pass'    => (string)getenv('DB_PASS'),
+            'charset' => 'utf8mb4',
+            'ssl_ca'  => getenv('DB_SSL_CA') ?: null,   // PEM text of the provider's CA certificate
+        ],
+        'app' => [
+            'timezone'     => getenv('APP_TIMEZONE') ?: 'Asia/Phnom_Penh',
+            'base_url'     => getenv('APP_BASE_URL') ?: null,
+            'session_name' => 'pfm_session',
+            'debug'        => getenv('APP_DEBUG') === 'true',
+        ],
+    ];
+}
+$GLOBALS['PFM_ENV_CONFIG'] = env_config();
+
 function app_config(): array {
     static $cfg = null;
+    if ($cfg === null && $GLOBALS['PFM_ENV_CONFIG'] !== null) $cfg = $GLOBALS['PFM_ENV_CONFIG'];
     if ($cfg === null) {
         if (!is_file($GLOBALS['PFM_CONFIG_FILE'])) {
             // First run: send the visitor to the setup wizard.
@@ -48,7 +74,9 @@ set_exception_handler(function (Throwable $e) {
 });
 
 // Secure session settings
-$https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off');
+// Render (and most hosts) terminate HTTPS at a proxy and forward plain HTTP, so also trust X-Forwarded-Proto.
+$https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+      || (strtolower((string)($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '')) === 'https');
 ini_set('session.use_strict_mode', '1');
 ini_set('session.use_only_cookies', '1');
 session_name($cfg['app']['session_name'] ?? 'pfm_session');
