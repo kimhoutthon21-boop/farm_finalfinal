@@ -1,5 +1,15 @@
 <?php
 // PDO connection (prepared statements only) plus tiny query helpers.
+
+// Hosting dashboards often flatten a pasted certificate onto one line (newlines become spaces or "\n").
+// Rebuild a valid PEM: take the base64 body between BEGIN/END, strip all whitespace, rewrap at 64 chars.
+function normalize_pem(string $raw): string {
+    $raw = str_replace(['\r', '\n'], ' ', $raw);
+    if (!preg_match('/-----BEGIN CERTIFICATE-----(.+?)-----END CERTIFICATE-----/s', $raw, $m)) return $raw;
+    $body = preg_replace('/[^A-Za-z0-9+\/=]/', '', $m[1]);
+    return "-----BEGIN CERTIFICATE-----\n" . chunk_split($body, 64, "\n") . "-----END CERTIFICATE-----\n";
+}
+
 function db(): PDO {
     static $pdo = null;
     if ($pdo !== null) return $pdo;
@@ -12,8 +22,9 @@ function db(): PDO {
     ];
     // Cloud MySQL (e.g. Aiven) requires TLS: the CA certificate is passed as PEM text and written to a temp file.
     if (!empty($c['ssl_ca'])) {
-        $caFile = sys_get_temp_dir() . '/pfm-db-ca-' . md5($c['ssl_ca']) . '.pem';
-        if (!is_file($caFile)) file_put_contents($caFile, str_replace('\n', "\n", $c['ssl_ca']));
+        $pem = normalize_pem((string)$c['ssl_ca']);
+        $caFile = sys_get_temp_dir() . '/pfm-db-ca-' . md5($pem) . '.pem';
+        if (!is_file($caFile)) file_put_contents($caFile, $pem);
         $opts[PDO::MYSQL_ATTR_SSL_CA] = $caFile;
         $opts[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = true;
     }

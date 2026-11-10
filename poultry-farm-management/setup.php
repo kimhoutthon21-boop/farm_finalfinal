@@ -43,7 +43,14 @@ if (!$configExists) {
 
 // Config exists: make sure tables exist, then create the first admin.
 try { $hasUsers = (bool)val("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'users'"); }
-catch (Throwable $ex) { setup_shell('Database not reachable', '<div class="notice danger">config/config.php exists but the database connection failed. Check the credentials in that file and that MySQL is running.</div>'); }
+catch (Throwable $ex) {
+    error_log('[PFM setup] database connection failed: ' . $ex->getMessage());
+    $where = $GLOBALS['PFM_ENV_CONFIG'] !== null
+        ? 'The database connection failed. Check the DB_HOST, DB_PORT, DB_USER, DB_PASS, DB_NAME and DB_SSL_CA environment variables on your hosting dashboard.'
+        : 'config/config.php exists but the database connection failed. Check the credentials in that file and that MySQL is running.';
+    // PDO messages contain the host and user name but never the password.
+    setup_shell('Database not reachable', '<div class="notice danger">' . e($where) . '</div><p class="muted" style="word-break:break-word">Reason: ' . e($ex->getMessage()) . '</p>');
+}
 if (!$hasUsers) {
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valid()) { run_sql_file(db(), __DIR__ . '/database/schema.sql'); run_sql_file(db(), __DIR__ . '/database/seed.sql'); redirect('setup.php'); }
     setup_shell('Install database tables', '<p class="muted">The connection works but the tables are missing.</p><form method="post">' . csrf_field() . '<button class="btn btn-primary" style="width:100%">Install tables</button></form>');
