@@ -23,7 +23,7 @@ function page_start(string $title, string $active = '', array $opts = []): void 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title><?= e(t($title)) ?> · <?= e(setting('farm_name', 'Poultry Farm')) ?></title>
 <script>try { document.documentElement.dataset.theme = localStorage.getItem('pfm-theme') === 'dark' ? 'dark' : 'light'; } catch (error) { document.documentElement.dataset.theme = 'light'; console.warn('Theme preference could not be loaded.', error); }</script>
-<link rel="stylesheet" href="<?= e(url('assets/css/app.css')) ?>?v=59">
+<link rel="stylesheet" href="<?= e(url('assets/css/app.css')) ?>?v=62">
 </head><body class="<?= $u ? 'app sidebar-compact' : 'auth' . ($title === 'Log in' ? ' login-page' : '') ?>">
 <?php if ($u): render_sidebar($active); ?>
 <div class="main-wrap">
@@ -34,8 +34,6 @@ function page_start(string $title, string $active = '', array $opts = []): void 
     <div class="search-pop" data-search-pop hidden></div>
   </div>
   <div class="top-actions">
-    <?= language_switcher() ?>
-    <div class="theme-switch-wrap"><input class="theme-switch-input" id="theme-switch" type="checkbox" data-theme-toggle aria-label="Enable dark mode"><label class="theme-switch-button" for="theme-switch" data-theme-toggle-label title="Switch to dark mode"><span class="theme-switch-icon theme-switch-moon"><?= icon('moon', 20) ?></span><span class="theme-switch-icon theme-switch-sun"><?= icon('sun', 20) ?></span></label></div>
     <div class="dropdown" data-dropdown>
       <button class="icon-btn" data-dropdown-toggle data-notification-toggle data-alert-user="<?= (int)$u['id'] ?>" data-alert-key="<?= e($alertReadKey) ?>" aria-label="Notifications"><?= icon('bell') ?><?php if ($alertCount): ?><span class="dot" data-alert-count><?= min(99, $alertCount) ?></span><?php endif; ?></button>
       <div class="dropdown-menu wide" hidden>
@@ -49,7 +47,7 @@ function page_start(string $title, string $active = '', array $opts = []): void 
     <div class="dropdown" data-dropdown>
       <button class="user-chip" data-dropdown-toggle><span class="avatar"><?= e(mb_strtoupper(mb_substr($u['full_name'], 0, 1))) ?></span><span class="uname"><?= e($u['full_name']) ?><small><?= e(ucfirst($u['role'])) ?></small></span><?= icon('down', 16) ?></button>
       <div class="dropdown-menu" hidden>
-        <a href="<?= e(url('profile.php')) ?>"><?= icon('lock', 16) ?> Change password</a>
+        <a href="<?= e(url('profile.php')) ?>"><?= icon('settings', 16) ?> Settings</a>
         <form method="post" action="<?= e(url('logout.php')) ?>"><?= csrf_field() ?><button type="submit"><?= icon('logout', 16) ?> Log out</button></form>
       </div>
     </div>
