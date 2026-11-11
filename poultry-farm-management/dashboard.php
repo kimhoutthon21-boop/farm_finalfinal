@@ -64,7 +64,9 @@ function trend(float $now, float $prev): string {
     return '<span class="' . ($d > 0 ? 'up' : 'down') . '">' . ($d > 0 ? '▲' : ($d < 0 ? '▼' : '•')) . ' ' . number_format($p, 0) . '%</span> <span class="muted">vs yesterday</span>';
 }
 page_start('Dashboard', 'dashboard');
-page_head('Farm dashboard', 'Live figures from daily reports · ' . fmt_date($t), '<a class="btn btn-primary btn-featured" href="' . e(url('reports/create.php')) . '">' . icon('plus', 18) . ' New daily report</a>');
+$hour = (int)date('G');
+$greeting = $hour >= 5 && $hour < 12 ? 'Good morning, admin!' : ($hour >= 12 && $hour < 18 ? 'Good afternoon, admin!' : 'Good night, admin!');
+page_head($greeting, 'Live figures from daily reports · ' . fmt_date($t), '<a class="btn btn-primary btn-featured" href="' . e(url('reports/create.php')) . '">' . icon('plus', 18) . ' New daily report</a>');
 echo range_filter_html($R);
 if ($R['cycle_missing']) echo '<div class="notice">' . icon('info', 18) . '<span>There is no active cycle, so "This cycle" shows the last 30 days.</span></div>';
 $cards = [

@@ -8,6 +8,9 @@ function translations(): array {
     static $translations = null;
     if ($translations === null) {
         $translations = [
+            'Good morning, admin!' => 'អរុណសួស្តី អ្នកគ្រប់គ្រង!',
+            'Good afternoon, admin!' => 'ទិវាសួស្តី អ្នកគ្រប់គ្រង!',
+            'Good night, admin!' => 'រាត្រីសួស្តី អ្នកគ្រប់គ្រង!',
             'Dashboard' => 'ផ្ទាំងគ្រប់គ្រង',
             'Farm dashboard' => 'ផ្ទាំងគ្រប់គ្រងកសិដ្ឋាន',
             'Daily Report' => 'របាយការណ៍ប្រចាំថ្ងៃ',
