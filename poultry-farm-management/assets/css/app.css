@@ -1,4 +1,4 @@
-:root{--g900:#0b3320;--g800:#0f4a2c;--g700:#14663b;--g600:#1b7f4a;--g100:#e3f1e8;--g50:#f1f8f3;--bg:#f3f5f2;--card:#fff;--ink:#17261d;--muted:#66756b;--line:#e1e7e2;--warn:#b7791f;--warn-bg:#fdf3dc;--danger:#b42a2a;--danger-bg:#fbe7e7;--info:#1f6f8b;--info-bg:#e2f1f6;--ok-bg:#e1f3e7;--r:14px;--shadow:0 1px 2px rgba(15,50,30,.06),0 4px 14px rgba(15,50,30,.05);--shadow-lg:0 10px 30px rgba(15,50,30,.14);--sidebar:264px;--sidebar-mini:78px;--font:"Segoe UI","Khmer UI","Khmer OS System",system-ui,-apple-system,Roboto,"Noto Sans Khmer","Helvetica Neue",Arial,sans-serif}
+:root{--g900:#0b3320;--g800:#0f4a2c;--g700:#14663b;--g600:#1b7f4a;--g100:#e3f1e8;--g50:#f1f8f3;--bg:#f3f5f2;--card:#fff;--ink:#17261d;--muted:#59675e;--line:#e1e7e2;--warn:#b7791f;--warn-bg:#fdf3dc;--danger:#b42a2a;--danger-bg:#fbe7e7;--info:#1f6f8b;--info-bg:#e2f1f6;--ok-bg:#e1f3e7;--r:14px;--shadow:0 1px 2px rgba(15,50,30,.06),0 4px 14px rgba(15,50,30,.05);--shadow-lg:0 10px 30px rgba(15,50,30,.14);--sidebar:264px;--sidebar-mini:78px;--font:"Segoe UI","Khmer UI","Khmer OS System",system-ui,-apple-system,Roboto,"Noto Sans Khmer","Helvetica Neue",Arial,sans-serif}
 *{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
 body{margin:0;font-family:var(--font);color:var(--ink);background:var(--bg);font-size:15px;line-height:1.5}
 a{color:var(--g700);text-decoration:none}a:hover{text-decoration:underline}
@@ -400,3 +400,13 @@ html[data-theme=dark] .theme-switch-input:not(:checked)+.theme-switch-button .th
 .report-form-card .notice.warn{background:rgba(227,138,166,.1);color:#f2c3d2}.report-form-card .notice.danger{background:rgba(237,119,119,.12);color:#f1b1b1}.report-form-card .notice.ok{background:rgba(25,158,112,.12);color:#a6dfb7}
 .report-form-card .notice a{color:#8fd5a5;text-decoration:underline}
 .credit{text-align:center;margin-top:24px}
+/* contrast fixes: labels that blended into their background */
+.chart-bento .btn-ghost{color:#f4f4f5;border-color:rgba(255,255,255,.18)}
+.chart-bento .btn-ghost:hover{background:rgba(255,255,255,.08);color:#fff}
+.farm-metric-card a{color:var(--metric-accent);text-decoration:underline;text-underline-offset:2px}
+.chart-bento .hint{color:rgba(244,244,245,.66)}
+html:not([data-theme=dark]) .badge-warn{color:#8a5a12}
+/* dark mode: white text needs darker fills */
+html[data-theme=dark] .btn-primary:not(.btn-featured),html[data-theme=dark] .btn-primary:not(.btn-featured):hover{background:linear-gradient(#1b7f4a,#14663b);border-color:#1b7f4a;color:#fff}
+html[data-theme=dark] .avatar{background:#1b7f4a;color:#fff}
+html[data-theme=dark] .btn-danger,html[data-theme=dark] .btn-danger:hover,html[data-theme=dark] .dot{background:#c53434;border-color:#c53434;color:#fff}

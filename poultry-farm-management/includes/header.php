@@ -24,7 +24,7 @@ function page_start(string $title, string $active = '', array $opts = []): void 
 <title><?= e(t($title)) ?> · <?= e(setting('farm_name', 'Poultry Farm')) ?></title>
 <script>try { document.documentElement.dataset.theme = localStorage.getItem('pfm-theme') === 'dark' ? 'dark' : 'light'; } catch (error) { document.documentElement.dataset.theme = 'light'; console.warn('Theme preference could not be loaded.', error); }</script>
 <link rel="stylesheet" href="<?= e(url('assets/css/icons.css')) ?>?v=1">
-<link rel="stylesheet" href="<?= e(url('assets/css/app.css')) ?>?v=65">
+<link rel="stylesheet" href="<?= e(url('assets/css/app.css')) ?>?v=67">
 </head><body class="<?= $u ? 'app sidebar-compact' : 'auth' . ($title === 'Log in' ? ' login-page' : '') ?>">
 <?php if ($u): render_sidebar($active); ?>
 <div class="main-wrap">
