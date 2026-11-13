@@ -47,8 +47,7 @@ $ds = fn($key) => array_values(array_map(function ($hn) use ($map, $labels, $key
 $deathsByDay = []; foreach ($series as $s) $deathsByDay[$s['d']] = ($deathsByDay[$s['d']] ?? 0) + (int)$s['deaths'];
 $chart = [
     'labels' => array_map(fn($d) => date('d M', strtotime($d)), $labels),
-    'deathLabels' => array_merge([date('d M', strtotime(add_days($R['from'], -1)))], array_map(fn($d) => date('d M', strtotime($d)), $labels)),
-    'deaths' => [['label' => 'Total deaths', 'data' => array_merge([0], array_map(fn($d) => $deathsByDay[$d] ?? null, $labels))]],
+    'deaths' => [['label' => 'Total deaths', 'color' => '#e66767', 'data' => array_map(fn($d) => $deathsByDay[$d] ?? null, $labels)]],
     'feed' => $ds('feed'),
     'hasData' => (bool)$series,
 ];

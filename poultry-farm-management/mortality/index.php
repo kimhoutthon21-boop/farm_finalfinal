@@ -11,11 +11,6 @@ $cycles = cycle_stats($cyW, $cyP, "FIELD(status,'active','closed','archived'), h
 $livingActive = array_sum(array_map(fn($c) => $c['status'] === 'active' ? $c['living'] : 0, $cycles));
 $daily = rows("SELECT r.report_date d, h.house_number hn, SUM(r.deaths) deaths, MAX(c.initial_population) placed $FROM WHERE $W GROUP BY r.report_date, h.house_number", $P);
 $chart = series_by_house($R, $daily, 'deaths'); $chart['hasData'] = (bool)$daily;
-if ($chart['hasData']) {
-    array_unshift($chart['labels'], date('d M', strtotime(add_days($R['from'], -1))));
-    foreach ($chart['sets'] as &$set) array_unshift($set['data'], 0);
-    unset($set);
-}
 // cumulative deaths per selected cycle (full cycle history, not limited by date filter)
 $cum = []; foreach (array_slice($cycles, 0, 6) as $c) { $run = 0; $pts = rows("SELECT report_date, deaths FROM daily_reports WHERE cycle_id = ? AND status = 'submitted' ORDER BY report_date", [$c['id']]); $arr = [['x' => 0, 'y' => 0]]; foreach ($pts as $p) { $run += (int)$p['deaths']; $arr[] = ['x' => days_between($c['placement_date'], $p['report_date']) + 1, 'y' => $run]; } if (count($arr) > 1) $cum[] = ['label' => house_label($c['house_number']) . ' · ' . $c['cycle_name'], 'data' => $arr]; }
 $pg = paginate((int)val("SELECT COUNT(*) $FROM WHERE $W AND r.deaths > 0", $P), 15);

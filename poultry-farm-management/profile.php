@@ -18,4 +18,5 @@ page_head('My account', 'Signed in as ' . $u['username'] . ' (' . ucfirst($u['ro
     <button class="btn btn-primary">Update password</button>
   </form>
 </div>
+<p class="muted small credit">Icons: <a href="https://www.flaticon.com/uicons" target="_blank" rel="noopener">UIcons by Flaticon</a></p>
 <?php page_end();

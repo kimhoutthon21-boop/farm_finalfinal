@@ -152,9 +152,13 @@
   $$('[data-count]').forEach(function (el) {
     var target = parseFloat(el.getAttribute('data-count')); if (isNaN(target)) return;
     var dec = parseInt(el.getAttribute('data-dec') || '0', 10), t0 = null, dur = 700;
+    // Keep any unit (e.g. the % span) after the number while it counts up.
+    var num = document.createElement('span');
+    num.textContent = el.firstChild && el.firstChild.nodeType === 3 ? el.firstChild.nodeValue : '';
+    if (el.firstChild && el.firstChild.nodeType === 3) el.replaceChild(num, el.firstChild); else el.insertBefore(num, el.firstChild);
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     function step(ts) { if (!t0) t0 = ts; var p = Math.min(1, (ts - t0) / dur), v = target * (1 - Math.pow(1 - p, 3));
-      el.textContent = v.toLocaleString('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec }); if (p < 1) requestAnimationFrame(step); }
+      num.textContent = v.toLocaleString('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec }); if (p < 1) requestAnimationFrame(step); }
     requestAnimationFrame(step);
   });
 

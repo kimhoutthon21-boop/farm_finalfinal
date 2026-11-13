@@ -23,7 +23,8 @@ function page_start(string $title, string $active = '', array $opts = []): void 
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title><?= e(t($title)) ?> · <?= e(setting('farm_name', 'Poultry Farm')) ?></title>
 <script>try { document.documentElement.dataset.theme = localStorage.getItem('pfm-theme') === 'dark' ? 'dark' : 'light'; } catch (error) { document.documentElement.dataset.theme = 'light'; console.warn('Theme preference could not be loaded.', error); }</script>
-<link rel="stylesheet" href="<?= e(url('assets/css/app.css')) ?>?v=62">
+<link rel="stylesheet" href="<?= e(url('assets/css/icons.css')) ?>?v=1">
+<link rel="stylesheet" href="<?= e(url('assets/css/app.css')) ?>?v=65">
 </head><body class="<?= $u ? 'app sidebar-compact' : 'auth' . ($title === 'Log in' ? ' login-page' : '') ?>">
 <?php if ($u): render_sidebar($active); ?>
 <div class="main-wrap">
@@ -72,7 +73,7 @@ function page_end(array $scripts = []): void {
     echo '<div class="toasts" id="toasts" aria-live="polite"></div>';
     echo '<div class="modal" id="confirm-modal" hidden><div class="modal-backdrop" data-modal-close></div><div class="modal-card sm"><div class="modal-head"><h3 id="confirm-title">Please confirm</h3></div><div class="modal-body"><p id="confirm-text"></p><div class="modal-actions"><button class="btn btn-ghost" data-modal-close type="button">Cancel</button><button class="btn btn-danger" id="confirm-ok" type="button">Confirm</button></div></div></div></div>';
     echo '<script src="' . e(url('assets/js/i18n.js')) . '?v=1"></script>';
-    echo '<script src="' . e(url('assets/js/app.js')) . '?v=29"></script>';
-    foreach ($scripts as $s) echo '<script src="' . e(url($s)) . '?v=20"></script>';
+    echo '<script src="' . e(url('assets/js/app.js')) . '?v=30"></script>';
+    foreach ($scripts as $s) echo '<script src="' . e(url($s)) . '?v=21"></script>';
     echo '</body></html>';
 }

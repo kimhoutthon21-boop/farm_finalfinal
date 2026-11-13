@@ -119,7 +119,7 @@ a.farm-metric-card:hover,.farm-metric-card:hover{transform:translateY(-5px) scal
 .metric-indicator .up,.metric-indicator .down{color:var(--metric-accent)}
 .metric-coral{--metric-accent:#8fd5a5;--metric-glow:rgba(143,213,165,.13)}
 .metric-blue{--metric-accent:#79b7d5;--metric-glow:rgba(121,183,213,.13)}
-.metric-gold{--metric-accent:#d5b879;--metric-glow:rgba(213,184,121,.13)}
+.metric-gold{--metric-accent:#7fcfc4;--metric-glow:rgba(127,207,196,.13)}
 .metric-rose{--metric-accent:#d58fac;--metric-glow:rgba(213,143,172,.13)}
 .metric-violet{--metric-accent:#a99add;--metric-glow:rgba(169,154,221,.13)}
 .metric-green{--metric-accent:#a8cf77;--metric-glow:rgba(168,207,119,.13)}
@@ -367,3 +367,36 @@ html[data-theme=dark] .theme-switch-input:not(:checked)+.theme-switch-button .th
 @media(max-width:560px){.dropdown-menu.wide{position:fixed;top:56px;left:10px;right:10px;width:auto}}
 @media print{.sidebar,.topbar,.page-actions,.toasts{display:none}.main-wrap{margin:0}}
 [hidden]{display:none!important}
+/* chart polish */
+.chart-box.donut-box{height:220px}
+.breakdown td:first-child{display:flex;align-items:center;gap:10px}
+.slice-dot{width:10px;height:10px;border-radius:50%;flex:none;background:#6b6a72}
+.chart-bento .row-unallocated td{background:rgba(255,255,255,.035)}
+.row-unallocated td{background:#faf7ee}
+/* dark-card polish: no light boxes inside dark cards */
+.chart-bento .progress{background:rgba(255,255,255,.09)}
+.chart-bento .alert-item{background:rgba(255,255,255,.045);color:#f4f4f5;border-left-color:#79b7d5}
+.chart-bento .alert-item.warn{border-left-color:#e38aa6;background:rgba(227,138,166,.08)}
+.chart-bento .alert-item.danger{border-left-color:#ed7777;background:rgba(237,119,119,.1)}
+.chart-bento .alert-item:hover{filter:none;background:rgba(255,255,255,.08)}
+.chart-bento .alert-item span{color:rgba(244,244,245,.6)}
+.chart-bento .alert-item .icon{color:#79b7d5}.chart-bento .alert-item.warn .icon{color:#e38aa6}.chart-bento .alert-item.danger .icon{color:#ed7777}
+.chart-bento .notice{background:rgba(255,255,255,.05);color:#b4dce8}
+.chart-bento .notice.ok{background:rgba(25,158,112,.12);color:#a6dfb7}
+.chart-bento .notice.warn{background:rgba(227,138,166,.1);color:#f2c3d2}
+.chart-bento .notice.danger{background:rgba(237,119,119,.12);color:#f1b1b1}
+/* report form: one consistent dark field style (matches the dropdowns) */
+.report-form-card input:not([type=checkbox]):not([type=radio]),.report-form-card textarea{background:#24232b;color:#fff;border:1px solid rgba(255,255,255,.14);border-radius:10px;color-scheme:dark}
+.report-form-card input[readonly]{background:rgba(255,255,255,.04);color:rgba(255,255,255,.75)}
+.report-form-card input::placeholder,.report-form-card textarea::placeholder{color:rgba(255,255,255,.4)}
+.report-form-card input:focus,.report-form-card textarea:focus{border-color:#199e70;box-shadow:0 0 0 3px rgba(25,158,112,.25);outline:0}
+.report-form-card .select>.selected{border-radius:10px;border-color:rgba(255,255,255,.14);background:#24232b;min-height:46px}
+.report-form-card .report-floating>span{color:rgba(255,255,255,.55)}
+.report-form-card .stepper .btn{border-color:rgba(255,255,255,.16);background:rgba(255,255,255,.06);border-radius:10px}
+.report-form-card .stepper .btn:hover{background:rgba(255,255,255,.12)}
+.report-form-card .pill span{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.16);color:#f4f4f5}
+.report-form-card .pill input:checked+span{background:#199e70;border-color:#199e70;color:#fff;box-shadow:0 2px 10px rgba(25,158,112,.35)}
+.report-form-card .notice{background:rgba(255,255,255,.05);color:#b4dce8}
+.report-form-card .notice.warn{background:rgba(227,138,166,.1);color:#f2c3d2}.report-form-card .notice.danger{background:rgba(237,119,119,.12);color:#f1b1b1}.report-form-card .notice.ok{background:rgba(25,158,112,.12);color:#a6dfb7}
+.report-form-card .notice a{color:#8fd5a5;text-decoration:underline}
+.credit{text-align:center;margin-top:24px}

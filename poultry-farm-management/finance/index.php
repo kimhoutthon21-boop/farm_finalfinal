@@ -34,16 +34,21 @@ if ($view === 'overview') {
     $incomplete = array_filter($flags, fn($f) => array_intersect($f, ['no revenue recorded', 'no expenses recorded']));
     echo '<div class="notice warn">' . icon('alert', 18) . '<div><strong>This is not a profit statement.</strong> ' . ($incomplete ? count($incomplete) . ' closed cycle(s) have missing expenses or revenue. ' : '') . 'Check that everything is recorded before treating the net result as actual profit.</div></div>';
     $expBy = rows("SELECT fc.name, SUM(e.amount) total, COUNT(*) n FROM expenses e JOIN finance_categories fc ON fc.id = e.category_id WHERE $WE GROUP BY fc.name ORDER BY total DESC", $PE);
-    echo '<div class="grid g2 mb"><div class="card chart-bento" data-spotlight><div class="card-head"><h2>Expenses by category</h2></div>';
-    if (!$expBy) echo empty_state('No expenses in this view', 'Add an expense to see the breakdown.', 'wallet'); else {
-        echo '<div class="chart-box sm"><canvas id="ch-exp"></canvas></div><div class="table-wrap mt"><table><tbody>'; foreach ($expBy as $x) echo '<tr><td>' . e($x['name']) . '</td><td class="num">' . e(fmt_money($x['total'])) . '</td><td class="num muted">' . fmt_pct(pct_of($x['total'], $totE), 1) . '</td></tr>'; echo '</tbody></table></div>'; }
-    echo '</div><div class="card chart-bento" data-spotlight><div class="card-head"><h2>Revenue by category</h2></div>';
     $revBy = rows("SELECT fc.name, SUM(e.amount) total FROM revenue e JOIN finance_categories fc ON fc.id = e.category_id WHERE $WR GROUP BY fc.name ORDER BY total DESC", $PR);
-    if (!$revBy) echo empty_state('No revenue in this view', 'Record sales to see income here.', 'trend'); else { echo '<div class="table-wrap"><table><tbody>'; foreach ($revBy as $x) echo '<tr><td>' . e($x['name']) . '</td><td class="num">' . e(fmt_money($x['total'])) . '</td><td class="num muted">' . fmt_pct(pct_of($x['total'], $totR), 1) . '</td></tr>'; echo '</tbody></table></div>'; }
+    // Donut + category list; each row's colour dot is filled in by PFM.donut (rows past the 5th share the "Other" colour).
+    $breakdown = function (array $list, float $tot, string $canvas): string {
+        $h = '<div class="chart-box donut-box"><canvas id="' . $canvas . '"></canvas></div><div class="table-wrap mt"><table class="breakdown"><tbody>';
+        foreach ($list as $i => $x) $h .= '<tr data-slice="' . $i . '"><td><span class="slice-dot"></span>' . e(t($x['name'])) . '</td><td class="num">' . e(fmt_money($x['total'])) . '</td><td class="num muted">' . fmt_pct(pct_of($x['total'], $tot), 1) . '</td></tr>';
+        return $h . '</tbody></table></div>';
+    };
+    echo '<div class="grid g2 mb"><div class="card chart-bento" data-spotlight><div class="card-head"><h2>Expenses by category</h2></div>';
+    echo $expBy ? $breakdown($expBy, (float)$totE, 'ch-exp') : empty_state('No expenses in this view', 'Add an expense to see the breakdown.', 'wallet');
+    echo '</div><div class="card chart-bento" data-spotlight><div class="card-head"><h2>Revenue by category</h2></div>';
+    echo $revBy ? $breakdown($revBy, (float)$totR, 'ch-rev') : empty_state('No revenue in this view', 'Record sales to see income here.', 'trend');
     echo '</div></div><div class="card chart-bento" data-spotlight><div class="card-head"><h2>Summary by production cycle</h2><span class="muted small">Current and previous cycles</span></div><div class="table-wrap"><table><thead><tr><th>Cycle</th><th>House</th><th class="num">Expenses</th><th class="num">Revenue</th><th class="num">Net</th><th>Data check</th></tr></thead><tbody>';
     foreach ($rowsC as $c) { $n = (float)$c['rv'] - (float)$c['ex']; echo '<tr><td><a href="' . e(url('cycles/view.php?id=' . $c['id'])) . '">' . e($c['cycle_name']) . '</a> ' . cycle_status_badge($c['status']) . '</td><td>' . e(house_label($c['house_number'])) . '</td><td class="num">' . e(fmt_money($c['ex'])) . '</td><td class="num">' . e(fmt_money($c['rv'])) . '</td><td class="num">' . ($n < 0 ? '−' : '') . e(fmt_money(abs($n))) . '</td><td class="small">' . ($flags[$c['id']] ? badge(implode(', ', $flags[$c['id']]), 'warn') : badge('Complete entries', 'success')) . '</td></tr>'; }
-    echo '<tr style="background:#faf7ee"><td><strong>Unallocated</strong><div class="small muted">not linked to any cycle</div></td><td>—</td><td class="num">' . e(fmt_money($unE)) . '</td><td class="num">' . e(fmt_money($unR)) . '</td><td class="num">' . ($unR - $unE < 0 ? '−' : '') . e(fmt_money(abs($unR - $unE))) . '</td><td class="small">' . ($unE + $unR > 0 ? badge('Needs a cycle?', 'warn') : '—') . '</td></tr></tbody></table></div></div>';
-    echo '<script>window.__fin = ' . json_encode(['exp' => $expBy], JSON_HEX_TAG) . ';</script>';
+    echo '<tr class="row-unallocated"><td><strong>Unallocated</strong><div class="small muted">not linked to any cycle</div></td><td>—</td><td class="num">' . e(fmt_money($unE)) . '</td><td class="num">' . e(fmt_money($unR)) . '</td><td class="num">' . ($unR - $unE < 0 ? '−' : '') . e(fmt_money(abs($unR - $unE))) . '</td><td class="small">' . ($unE + $unR > 0 ? badge('Needs a cycle?', 'warn') : '—') . '</td></tr></tbody></table></div></div>';
+    echo '<script>window.__fin = ' . json_encode(['exp' => $expBy, 'rev' => $revBy, 'symbol' => setting('currency_symbol', '៛')], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE) . ';</script>';
 } else {
     $tbl = fin_table($view); $total = $view === 'revenue' ? $totR : $totE; $WW = $view === 'revenue' ? $WR : $WE; $PP = $view === 'revenue' ? $PR : $PE;
     $st = sort_state(['date' => 'e.txn_date', 'amount' => 'e.amount', 'category' => 'fc.name'], 'date');
