@@ -29,10 +29,12 @@ function farm_alerts(): array {
     foreach ($cycles as $c) {
         $n0 = count($out);
         $h = house_label($c['house_number']);
-        $dates = rows("SELECT report_date, deaths FROM daily_reports WHERE cycle_id = ? AND status = 'submitted' AND report_date >= ?", [$c['id'], add_days($t, -3)]);
+        $dates = rows("SELECT report_date, deaths, standard_deaths FROM daily_reports WHERE cycle_id = ? AND status = 'submitted' AND report_date >= ?", [$c['id'], add_days($t, -3)]);
         $have = array_column($dates, 'deaths', 'report_date');
         if ($c['placement_date'] <= $y && !isset($have[$y])) $out[] = ['level' => 'warn', 'title' => "$h: missing report for " . fmt_date($y), 'text' => 'No daily report was recorded yesterday.', 'url' => 'reports/create.php?house=' . $c['house_id'] . '&date=' . $y];
         if ($c['placement_date'] <= $t && !isset($have[$t]) && (int)date('G') >= $hour) $out[] = ['level' => 'info', 'title' => "$h: today's report is not in yet", 'text' => 'Reminder after ' . sprintf('%02d:00', $hour) . '.', 'url' => 'reports/create.php?house=' . $c['house_id']];
+        foreach ($dates as $x) if ($x['standard_deaths'] !== null && (int)$x['deaths'] > (int)$x['standard_deaths'])
+            $out[] = ['level' => 'warn', 'title' => "$h: deaths above standard on " . fmt_date($x['report_date']), 'text' => fmt_int($x['deaths']) . ' deaths, standard is ' . fmt_int($x['standard_deaths']) . '.', 'url' => 'mortality/index.php'];
         foreach ($have as $d => $deaths) {
             $p = pct_of($deaths, $c['initial_population']);
             if ($dailyWarn > 0 && $p >= $dailyWarn) $out[] = ['level' => $p >= 2 * $dailyWarn ? 'danger' : 'warn', 'title' => "$h: high deaths on " . fmt_date($d), 'text' => fmt_int($deaths) . ' deaths = ' . fmt_pct($p) . ' of placed (limit ' . fmt_pct($dailyWarn) . ').', 'url' => 'cycles/view.php?id=' . $c['id']];

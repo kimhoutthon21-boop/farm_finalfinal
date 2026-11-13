@@ -74,6 +74,6 @@ function page_end(array $scripts = []): void {
     echo '<div class="modal" id="confirm-modal" hidden><div class="modal-backdrop" data-modal-close></div><div class="modal-card sm"><div class="modal-head"><h3 id="confirm-title">Please confirm</h3></div><div class="modal-body"><p id="confirm-text"></p><div class="modal-actions"><button class="btn btn-ghost" data-modal-close type="button">Cancel</button><button class="btn btn-danger" id="confirm-ok" type="button">Confirm</button></div></div></div></div>';
     echo '<script src="' . e(url('assets/js/i18n.js')) . '?v=1"></script>';
     echo '<script src="' . e(url('assets/js/app.js')) . '?v=30"></script>';
-    foreach ($scripts as $s) echo '<script src="' . e(url($s)) . '?v=21"></script>';
+    foreach ($scripts as $s) echo '<script src="' . e(url($s)) . '?v=23"></script>';
     echo '</body></html>';
 }

@@ -22,6 +22,9 @@ function parse_report_input(array $c, ?array $existing, bool $admin): array {
     $deathsRaw = post('deaths');
     if (!preg_match('/^\d{1,7}$/', $deathsRaw)) throw new UserError('Deaths must be a whole number, 0 or more.');
     $deaths = (int)$deathsRaw;
+    $stdRaw = post('standard_deaths');
+    if (!preg_match('/^\d{1,7}$/', $stdRaw)) throw new UserError('Enter the standard (expected) deaths for today, 0 or more.');
+    $std = (int)$stdRaw;
 
     $causeId = null; $detail = null;
     if ($deaths > 0) {
@@ -44,12 +47,12 @@ function parse_report_input(array $c, ?array $existing, bool $admin): array {
 
     $workerId = $admin ? (int)post('worker_id', (string)user_id()) : user_id();
     if (!val('SELECT id FROM users WHERE id = ? AND is_active = 1', [$workerId])) throw new UserError('Please choose who recorded this report.');
-    return ['date' => $d, 'feed' => $feed, 'deaths' => $deaths, 'cause' => $causeId, 'detail' => $detail, 'tasks' => $taskIds, 'desc' => $desc === '' ? null : $desc, 'notes' => $notes === '' ? null : $notes, 'worker' => $workerId];
+    return ['date' => $d, 'feed' => $feed, 'deaths' => $deaths, 'std' => $std, 'cause' => $causeId, 'detail' => $detail, 'tasks' => $taskIds, 'desc' => $desc === '' ? null : $desc, 'notes' => $notes === '' ? null : $notes, 'worker' => $workerId];
 }
 function report_snapshot(array $r, array $taskIds): array {
     $names = $taskIds ? array_column(rows('SELECT name FROM work_task_categories WHERE id IN (' . in_placeholders($taskIds) . ') ORDER BY name', $taskIds), 'name') : [];
     $cause = $r['death_cause_id'] ? val('SELECT name FROM death_causes WHERE id = ?', [$r['death_cause_id']]) : null;
-    return ['report_date' => $r['report_date'], 'worker' => val('SELECT full_name FROM users WHERE id = ?', [$r['worker_id']]), 'feed_bags' => (float)$r['feed_bags'], 'deaths' => (int)$r['deaths'], 'cause' => $cause, 'cause_detail' => $r['death_cause_detail'], 'tasks' => $names, 'work_description' => $r['work_description'], 'notes' => $r['notes'], 'status' => $r['status']];
+    return ['report_date' => $r['report_date'], 'worker' => val('SELECT full_name FROM users WHERE id = ?', [$r['worker_id']]), 'feed_bags' => (float)$r['feed_bags'], 'deaths' => (int)$r['deaths'], 'standard_deaths' => $r['standard_deaths'] === null ? null : (int)$r['standard_deaths'], 'cause' => $cause, 'cause_detail' => $r['death_cause_detail'], 'tasks' => $names, 'work_description' => $r['work_description'], 'notes' => $r['notes'], 'status' => $r['status']];
 }
 function task_ids(int $reportId): array { return array_map('intval', array_column(rows('SELECT task_id FROM daily_report_tasks WHERE report_id = ?', [$reportId]), 'task_id')); }
 function save_tasks(int $reportId, array $ids): void { q('DELETE FROM daily_report_tasks WHERE report_id = ?', [$reportId]); foreach ($ids as $t) q('INSERT INTO daily_report_tasks (report_id, task_id) VALUES (?,?)', [$reportId, $t]); }
@@ -72,7 +75,7 @@ try {
             $c = cycle_stat((int)$act['id']); $in = parse_report_input($c, null, $admin);
             if ($ex = row('SELECT id, status FROM daily_reports WHERE cycle_id = ? AND report_date = ?', [$c['id'], $in['date']])) throw new UserError('A report for ' . house_label($c['house_number']) . ' on ' . fmt_date($in['date']) . ' already exists' . ($ex['status'] === 'voided' ? ' (voided). Ask an administrator to restore or correct it.' : '. Ask an administrator to correct it if something was wrong.'));
             if ($in['deaths'] > $c['living']) throw new UserError('Deaths (' . fmt_int($in['deaths']) . ') are more than the chickens still living (' . fmt_int($c['living']) . ').');
-            q('INSERT INTO daily_reports (cycle_id, report_date, worker_id, feed_bags, deaths, death_cause_id, death_cause_detail, work_description, notes, submission_token, created_by) VALUES (?,?,?,?,?,?,?,?,?,?,?)', [$c['id'], $in['date'], $in['worker'], $in['feed'], $in['deaths'], $in['cause'], $in['detail'], $in['desc'], $in['notes'], $token, $u['id']]);
+            q('INSERT INTO daily_reports (cycle_id, report_date, worker_id, feed_bags, deaths, standard_deaths, death_cause_id, death_cause_detail, work_description, notes, submission_token, created_by) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)', [$c['id'], $in['date'], $in['worker'], $in['feed'], $in['deaths'], $in['std'], $in['cause'], $in['detail'], $in['desc'], $in['notes'], $token, $u['id']]);
             $rid = (int)$pdo->lastInsertId(); save_tasks($rid, $in['tasks']);
             $new = report_snapshot(row('SELECT * FROM daily_reports WHERE id = ?', [$rid]), $in['tasks']); $new['living_before'] = $c['living']; $new['living_after'] = $c['living'] - $in['deaths'];
             audit_log('report.create', 'report', $rid, null, $new);
@@ -93,7 +96,7 @@ try {
             $available = $c['living'] + ($old['status'] === 'submitted' ? (int)$old['deaths'] : 0);
             if ($old['status'] === 'submitted' && $in['deaths'] > $available) throw new UserError('Deaths (' . fmt_int($in['deaths']) . ') would exceed the chickens available (' . fmt_int($available) . ').');
             $oldTasks = task_ids($rid); $oldSnap = report_snapshot($old, $oldTasks);
-            q('UPDATE daily_reports SET report_date = ?, worker_id = ?, feed_bags = ?, deaths = ?, death_cause_id = ?, death_cause_detail = ?, work_description = ?, notes = ?, revision = revision + 1 WHERE id = ?', [$in['date'], $in['worker'], $in['feed'], $in['deaths'], $in['cause'], $in['detail'], $in['desc'], $in['notes'], $rid]);
+            q('UPDATE daily_reports SET report_date = ?, worker_id = ?, feed_bags = ?, deaths = ?, standard_deaths = ?, death_cause_id = ?, death_cause_detail = ?, work_description = ?, notes = ?, revision = revision + 1 WHERE id = ?', [$in['date'], $in['worker'], $in['feed'], $in['deaths'], $in['std'], $in['cause'], $in['detail'], $in['desc'], $in['notes'], $rid]);
             save_tasks($rid, $in['tasks']);
             $newSnap = report_snapshot(row('SELECT * FROM daily_reports WHERE id = ?', [$rid]), $in['tasks']);
             if ($oldSnap == $newSnap) throw new UserError('Nothing was changed.');

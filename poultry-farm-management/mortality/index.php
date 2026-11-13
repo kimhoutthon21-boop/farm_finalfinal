@@ -14,7 +14,7 @@ $chart = series_by_house($R, $daily, 'deaths'); $chart['hasData'] = (bool)$daily
 // cumulative deaths per selected cycle (full cycle history, not limited by date filter)
 $cum = []; foreach (array_slice($cycles, 0, 6) as $c) { $run = 0; $pts = rows("SELECT report_date, deaths FROM daily_reports WHERE cycle_id = ? AND status = 'submitted' ORDER BY report_date", [$c['id']]); $arr = [['x' => 0, 'y' => 0]]; foreach ($pts as $p) { $run += (int)$p['deaths']; $arr[] = ['x' => days_between($c['placement_date'], $p['report_date']) + 1, 'y' => $run]; } if (count($arr) > 1) $cum[] = ['label' => house_label($c['house_number']) . ' · ' . $c['cycle_name'], 'data' => $arr]; }
 $pg = paginate((int)val("SELECT COUNT(*) $FROM WHERE $W AND r.deaths > 0", $P), 15);
-$hist = rows("SELECT r.id, r.report_date, r.deaths, dc.name cause, r.death_cause_detail, c.initial_population, c.cycle_name, h.house_number $FROM WHERE $W AND r.deaths > 0 ORDER BY r.report_date DESC, h.house_number LIMIT " . $pg['per'] . ' OFFSET ' . $pg['offset'], $P);
+$hist = rows("SELECT r.id, r.report_date, r.deaths, r.standard_deaths, dc.name cause, r.death_cause_detail, c.initial_population, c.cycle_name, h.house_number $FROM WHERE $W AND r.deaths > 0 ORDER BY r.report_date DESC, h.house_number LIMIT " . $pg['per'] . ' OFFSET ' . $pg['offset'], $P);
 page_start('Mortality', 'mortality');
 page_head('Mortality analytics', 'Mortality figures for the selected range.');
 echo range_filter_html($R, ['house_id' => $houseId ?: '', 'cycle_id' => $cycleId ?: '']) . house_cycle_filter_html($R, $houseId, $cycleId, 'mortality/index.php');
@@ -32,8 +32,8 @@ if (!$cycles) echo empty_state('No cycles', '', 'layers'); else {
     echo '</tbody></table></div>'; }
 echo '</div><div class="card chart-bento" data-spotlight><div class="card-head"><h2>Days with deaths</h2></div>';
 if (!$hist) echo empty_state('No deaths recorded in this range', 'Good news, or no reports yet.', 'check'); else {
-    echo '<div class="table-wrap"><table><thead><tr><th>Date</th><th>House</th><th class="num">Deaths</th><th class="num">Daily mortality</th><th>Cause</th><th></th></tr></thead><tbody>';
-    foreach ($hist as $x) { $p = pct_of($x['deaths'], $x['initial_population']); echo '<tr><td>' . e(fmt_date($x['report_date'])) . '</td><td>' . e(house_label($x['house_number'])) . '</td><td class="num">' . fmt_int($x['deaths']) . '</td><td class="num">' . fmt_pct($p) . ($dailyWarn > 0 && $p >= $dailyWarn ? ' ' . badge('High', 'warn') : '') . '</td><td class="small">' . e(($x['cause'] ?? '—') . ($x['death_cause_detail'] ? ': ' . $x['death_cause_detail'] : '')) . '</td><td class="act"><a class="btn btn-ghost btn-sm" href="' . e(url('reports/view.php?id=' . $x['id'])) . '">Report</a></td></tr>'; }
+    echo '<div class="table-wrap"><table><thead><tr><th>Date</th><th>House</th><th class="num">Deaths</th><th class="num">Standard</th><th class="num">Daily mortality</th><th>Cause</th><th></th></tr></thead><tbody>';
+    foreach ($hist as $x) { $p = pct_of($x['deaths'], $x['initial_population']); echo '<tr><td>' . e(fmt_date($x['report_date'])) . '</td><td>' . e(house_label($x['house_number'])) . '</td><td class="num">' . fmt_int($x['deaths']) . ($x['standard_deaths'] !== null && $x['deaths'] > $x['standard_deaths'] ? ' ' . badge('Above', 'danger') : '') . '</td><td class="num muted">' . ($x['standard_deaths'] === null ? '—' : fmt_int($x['standard_deaths'])) . '</td><td class="num">' . fmt_pct($p) . ($dailyWarn > 0 && $p >= $dailyWarn ? ' ' . badge('High', 'warn') : '') . '</td><td class="small">' . e(($x['cause'] ?? '—') . ($x['death_cause_detail'] ? ': ' . $x['death_cause_detail'] : '')) . '</td><td class="act"><a class="btn btn-ghost btn-sm" href="' . e(url('reports/view.php?id=' . $x['id'])) . '">Report</a></td></tr>'; }
     echo '</tbody></table></div>' . pagination_html($pg); }
 echo '</div>';
 $cdata = ['daily' => $chart, 'cum' => $cum];

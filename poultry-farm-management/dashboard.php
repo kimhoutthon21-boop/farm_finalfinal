@@ -40,20 +40,20 @@ $mortality = pct_of($deathsActive, $placed);
 $activeHouses = count($active);
 
 // Chart data (null = no report that day, so a missing report is never drawn as "0 deaths")
-$series = rows("SELECT r.report_date d, h.house_number hn, SUM(r.deaths) deaths, SUM(r.feed_bags) feed FROM daily_reports r JOIN production_cycles c ON c.id = r.cycle_id JOIN houses h ON h.id = c.house_id WHERE r.status = 'submitted' AND r.report_date BETWEEN ? AND ? GROUP BY r.report_date, h.house_number", [$R['from'], $R['to']]);
+$series = rows("SELECT r.report_date d, h.house_number hn, SUM(r.deaths) deaths, SUM(r.standard_deaths) std, SUM(r.feed_bags) feed FROM daily_reports r JOIN production_cycles c ON c.id = r.cycle_id JOIN houses h ON h.id = c.house_id WHERE r.status = 'submitted' AND r.report_date BETWEEN ? AND ? GROUP BY r.report_date, h.house_number", [$R['from'], $R['to']]);
 $labels = []; for ($d = $R['from']; $d <= $R['to']; $d = add_days($d, 1)) $labels[] = $d;
 $map = []; foreach ($series as $s) $map[$s['hn']][$s['d']] = $s;
 $ds = fn($key) => array_values(array_map(function ($hn) use ($map, $labels, $key) { return ['label' => house_label($hn), 'data' => array_map(fn($d) => isset($map[$hn][$d]) ? (float)$map[$hn][$d][$key] : null, $labels)]; }, array_keys($map)));
-$deathsByDay = []; foreach ($series as $s) $deathsByDay[$s['d']] = ($deathsByDay[$s['d']] ?? 0) + (int)$s['deaths'];
+$deathsByDay = []; $stdByDay = []; foreach ($series as $s) { $deathsByDay[$s['d']] = ($deathsByDay[$s['d']] ?? 0) + (int)$s['deaths']; if ($s['std'] !== null) $stdByDay[$s['d']] = ($stdByDay[$s['d']] ?? 0) + (int)$s['std']; }
 $chart = [
     'labels' => array_map(fn($d) => date('d M', strtotime($d)), $labels),
-    'deaths' => [['label' => 'Total deaths', 'color' => '#e66767', 'data' => array_map(fn($d) => $deathsByDay[$d] ?? null, $labels)]],
+    'deaths' => [['label' => 'Total deaths', 'color' => '#e66767', 'data' => array_map(fn($d) => $deathsByDay[$d] ?? null, $labels)]] + ($stdByDay ? [1 => ['label' => 'Standard deaths', 'color' => '#9a99a3', 'dash' => true, 'data' => array_map(fn($d) => $stdByDay[$d] ?? null, $labels)]] : []),
     'feed' => $ds('feed'),
     'hasData' => (bool)$series,
 ];
 $recent = rows("SELECT r.id, r.report_date, r.feed_bags, r.deaths, r.status, r.revision, h.house_number, w.full_name worker FROM daily_reports r JOIN production_cycles c ON c.id = r.cycle_id JOIN houses h ON h.id = c.house_id JOIN users w ON w.id = r.worker_id ORDER BY r.report_date DESC, r.id DESC LIMIT 8");
 $alerts = farm_alerts();
-$todayRows = rows("SELECT c.id cycle_id, r.id rid, r.feed_bags, r.deaths, r.status, (SELECT GROUP_CONCAT(t.name SEPARATOR ', ') FROM daily_report_tasks x JOIN work_task_categories t ON t.id = x.task_id WHERE x.report_id = r.id) tasks FROM production_cycles c LEFT JOIN daily_reports r ON r.cycle_id = c.id AND r.report_date = ? AND r.status = 'submitted' WHERE c.status = 'active'", [$t]);
+$todayRows = rows("SELECT c.id cycle_id, r.id rid, r.feed_bags, r.deaths, r.standard_deaths, r.status, (SELECT GROUP_CONCAT(t.name SEPARATOR ', ') FROM daily_report_tasks x JOIN work_task_categories t ON t.id = x.task_id WHERE x.report_id = r.id) tasks FROM production_cycles c LEFT JOIN daily_reports r ON r.cycle_id = c.id AND r.report_date = ? AND r.status = 'submitted' WHERE c.status = 'active'", [$t]);
 $todayBy = array_column($todayRows, null, 'cycle_id');
 
 function trend(float $now, float $prev): string {
@@ -90,11 +90,11 @@ echo '</div>';
   <div class="card chart-bento" data-spotlight>
     <div class="card-head"><h2>Daily activity today</h2><span class="muted small"><?= count(array_filter($todayRows, fn($r) => $r['rid'])) ?> of <?= count($active) ?> reports in</span></div>
     <?php if (!$active): echo empty_state('No active cycles', 'Add a new cycle to start tracking daily activity.', 'layers', '<a class="btn btn-primary btn-featured" href="' . e(url('cycles/index.php?new=1')) . '">Add New Cycle</a>'); else: ?>
-    <div class="table-wrap"><table><thead><tr><th>House</th><th>Report</th><th class="num">Feed (bags)</th><th class="num">Deaths</th><th>Work done</th></tr></thead><tbody>
+    <div class="table-wrap"><table><thead><tr><th>House</th><th>Report</th><th class="num">Feed (bags)</th><th class="num">Deaths</th><th class="num">Standard</th><th>Work done</th></tr></thead><tbody>
     <?php foreach ($active as $c): $tr = $todayBy[$c['id']] ?? null; ?>
       <tr><td><a href="<?= e(url('houses/view.php?id=' . $c['house_id'])) ?>"><?= e(house_label($c['house_number'])) ?></a></td>
       <td><?= ($tr && $tr['rid']) ? '<a href="' . e(url('reports/view.php?id=' . $tr['rid'])) . '">' . badge('Submitted', 'success') . '</a>' : '<a href="' . e(url('reports/create.php?house=' . $c['house_id'])) . '">' . badge('Missing', 'warn') . '</a>' ?></td>
-      <td class="num"><?= ($tr && $tr['rid']) ? fmt_bags($tr['feed_bags']) : '—' ?></td><td class="num"><?= ($tr && $tr['rid']) ? fmt_int($tr['deaths']) : '—' ?></td><td class="small muted"><?= e($tr['tasks'] ?? '') ?: '—' ?></td></tr>
+      <td class="num"><?= ($tr && $tr['rid']) ? fmt_bags($tr['feed_bags']) : '—' ?></td><td class="num"><?= ($tr && $tr['rid']) ? fmt_int($tr['deaths']) . (($tr['standard_deaths'] !== null && $tr['deaths'] > $tr['standard_deaths']) ? ' ' . badge('Above', 'danger') : '') : '—' ?></td><td class="num muted"><?= ($tr && $tr['rid'] && $tr['standard_deaths'] !== null) ? fmt_int($tr['standard_deaths']) : '—' ?></td><td class="small muted"><?= e($tr['tasks'] ?? '') ?: '—' ?></td></tr>
     <?php endforeach; ?></tbody></table></div><?php endif; ?>
   </div>
   <div class="card chart-bento" data-spotlight>

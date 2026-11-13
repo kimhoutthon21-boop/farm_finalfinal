@@ -85,6 +85,7 @@ CREATE TABLE IF NOT EXISTS daily_reports (
   worker_id INT UNSIGNED NOT NULL,
   feed_bags DECIMAL(8,2) NOT NULL DEFAULT 0,
   deaths INT UNSIGNED NOT NULL DEFAULT 0,
+  standard_deaths INT UNSIGNED NULL,
   death_cause_id INT UNSIGNED NULL,
   death_cause_detail VARCHAR(500) NULL,
   work_description TEXT NULL,

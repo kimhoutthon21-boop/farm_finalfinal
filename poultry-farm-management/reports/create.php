@@ -9,7 +9,7 @@ $_SESSION['report_tokens'] = array_slice($_SESSION['report_tokens'] ?? [], -15, 
 $token = bin2hex(random_bytes(32)); $_SESSION['report_tokens'][$token] = time();
 $sel = (int)old('house_id', get('house', $cycles[0]['house_id'] ?? 0));
 $date = old('report_date', valid_date(get('date')) ? get('date') : $t);
-$v = ['report_date' => $date, 'worker_id' => old('worker_id', $user['id']), 'feed_bags' => old('feed_bags', ''), 'deaths' => old('deaths', '0'), 'death_cause_id' => old('death_cause_id', 0), 'death_cause_detail' => old('death_cause_detail'), 'work_description' => old('work_description'), 'notes' => old('notes'), 'tasks' => array_map('intval', (array)old('tasks', []))];
+$v = ['report_date' => $date, 'worker_id' => old('worker_id', $user['id']), 'feed_bags' => old('feed_bags', ''), 'deaths' => old('deaths', '0'), 'standard_deaths' => old('standard_deaths', ''), 'death_cause_id' => old('death_cause_id', 0), 'death_cause_detail' => old('death_cause_detail'), 'work_description' => old('work_description'), 'notes' => old('notes'), 'tasks' => array_map('intval', (array)old('tasks', []))];
 page_start('Daily report', 'report-new');
 page_head('Daily report', 'Record today\'s feed, deaths and work for a house. It takes about a minute.');
 if (!$cycles) {

@@ -37,6 +37,8 @@
     if (feed.value === '' || isNaN(f) || f < 0) p.push('Enter the feed consumed in bags (0 or more).');
     if (deaths.value === '' || isNaN(n) || n < 0) p.push('Enter the number of dead chickens (0 or more).');
     else if (n > parseInt(o.dataset.living, 10)) p.push('Deaths are more than the ' + fmt(o.dataset.living) + ' chickens living.');
+    var sv = $('f-std') ? $('f-std').value : '0', s = parseInt(sv, 10);
+    if (sv === '' || isNaN(s) || s < 0) p.push('Enter the standard deaths for today (0 or more).');
     if (n > 0) { if (!cause.value) p.push('Choose a cause of death.'); else if (cause.options[cause.selectedIndex].dataset.detail === '1' && $('f-detail').value.trim().length < 3) p.push('Describe the cause of death.'); }
     var tasks = form.querySelectorAll('input[name="tasks[]"]:checked').length;
     if (!tasks && !$('f-desc').value.trim()) p.push('Select at least one task or describe the work done.');
@@ -50,7 +52,8 @@
     $('review-list').innerHTML = '';
     row('Date', new Date(date.value + 'T00:00:00').toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }));
     row('House', o.text); row('Cycle', o.dataset.cycle); row('Worker', wname);
-    row('Feed consumed', parseFloat(feed.value) + ' bags'); row('Deaths', String(n));
+    row('Feed consumed', parseFloat(feed.value) + ' bags'); var sd = $('f-std') ? parseInt($('f-std').value, 10) : NaN;
+    row('Deaths', String(n) + (n > sd ? ' (' + (window.pfmTranslate ? window.pfmTranslate('above standard') : 'above standard') + ')' : '')); if (!isNaN(sd)) row('Standard deaths', String(sd));
     row('Cause of death', n > 0 ? cause.options[cause.selectedIndex].text + ($('f-detail').value.trim() ? ' — ' + $('f-detail').value.trim() : '') : '—');
     row('Living after this report', fmt(parseInt(o.dataset.living, 10) - n));
     row('Work performed', (tasks.join(', ') + ($('f-desc').value.trim() ? (tasks.length ? '. ' : '') + $('f-desc').value.trim() : '')) || '—');

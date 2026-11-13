@@ -10,6 +10,7 @@ foreach ($list as $r) $out[] = [
     'Worker' => $r['worker_name'],
     'Feed (bags)' => $r['feed_bags'],
     'Deaths' => $r['deaths'],
+    'Standard deaths' => $r['standard_deaths'] ?? '',
     'Cause' => $r['cause_name'] ?? '',
     'Cause details' => $r['death_cause_detail'] ?? '',
     'Work description' => $r['work_description'] ?? '',

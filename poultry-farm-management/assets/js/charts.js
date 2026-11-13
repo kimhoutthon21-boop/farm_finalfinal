@@ -58,7 +58,7 @@ window.PFM = (function () {
         var c = s.color || (single ? PALETTE[0] : colorFor(s.label, i));
         var last = s.data.length - 1;
         return { label: tr(s.label), data: s.data, borderColor: c, backgroundColor: c, borderWidth: 2,
-          borderCapStyle: 'round', borderJoinStyle: 'round', cubicInterpolationMode: 'monotone', spanGaps: true,
+          borderCapStyle: 'round', borderJoinStyle: 'round', cubicInterpolationMode: 'monotone', spanGaps: true, borderDash: s.dash ? [6, 5] : [],
           fill: single ? { target: 'origin', above: wash(c) } : false,
           pointRadius: function (ctx) { return ctx.dataIndex === last ? 4 : 0; },
           pointHoverRadius: 5, pointBorderColor: SURFACE, pointBorderWidth: 2, pointHoverBorderWidth: 2, pointHitRadius: 12 };
